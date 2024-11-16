@@ -243,6 +243,44 @@ header {
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
+.hint-button {
+    background: linear-gradient(135deg, #34d399, #059669) !important;
+    transition: all 0.2s ease !important;
+}
+
+.hint-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 211, 153, 0.2);
+}
+
+.hint-button:disabled {
+    background: #9ca3af !important;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.hint-message {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: rgba(52, 211, 153, 0.1);
+    border-left: 4px solid #34d399;
+    border-radius: 4px;
+    color: #059669;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.hint-message.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .modal {
     display: none;
     position: fixed;

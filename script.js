@@ -13,6 +13,9 @@ class WordleGame {
         this.keyboard = document.getElementById('keyboard');
         this.modal = document.getElementById('game-over-modal');
         this.wordLists = null;
+        this.hintsRemaining = 3;
+        this.hintButton = document.getElementById('hint-button');
+        this.hintMessage = document.getElementById('hint-message');
         
         this.initializeWordLists().then(() => {
             this.initializeGame();
@@ -107,6 +110,8 @@ class WordleGame {
         document.getElementById('word-length').addEventListener('change', () => {
             this.resetGame();
         });
+
+        this.hintButton.addEventListener('click', () => this.giveHint());
     }
 
     handleKeypress(e) {
@@ -276,6 +281,10 @@ class WordleGame {
         this.createBoard();
         
         console.log('New word:', this.word); // For testing
+        this.hintsRemaining = 3;
+        this.hintButton.disabled = false;
+        this.hintButton.textContent = `Get Hint (${this.hintsRemaining} left)`;
+        this.hintMessage.classList.remove('show');
     }
 
     handleWordLengthChange() {
@@ -292,6 +301,67 @@ class WordleGame {
 
     updateDisplay() {
         // Update display logic here
+    }
+
+    async giveHint() {
+        if (this.hintsRemaining <= 0 || this.gameOver) {
+            return;
+        }
+
+        this.hintsRemaining--;
+        this.hintButton.textContent = `Get Hint (${this.hintsRemaining} left)`;
+        
+        if (this.hintsRemaining === 0) {
+            this.hintButton.disabled = true;
+        }
+
+        // Randomly choose between first letter hint or pattern hint
+        if (Math.random() < 0.5) {
+            // First letter hint
+            this.showHint(`The word starts with '${this.word[0].toUpperCase()}'`);
+        } else {
+            // Pattern hint - show positions of a random letter that appears in the word
+            const letterPositions = this.getLetterPatternHint();
+            if (letterPositions) {
+                const [letter, positions] = letterPositions;
+                const posStr = positions.length === 1 ? 'position' : 'positions';
+                this.showHint(`The letter '${letter.toUpperCase()}' appears in ${positions.join(', ')} ${posStr}`);
+            } else {
+                // Fallback to first letter hint if pattern hint fails
+                this.showHint(`The word starts with '${this.word[0].toUpperCase()}'`);
+            }
+        }
+    }
+
+    getLetterPatternHint() {
+        // Get all letters that appear in the word (excluding first letter)
+        const letters = new Map();
+        for (let i = 1; i < this.word.length; i++) {
+            const letter = this.word[i];
+            if (!letters.has(letter)) {
+                letters.set(letter, []);
+            }
+            letters.get(letter).push(i + 1); // Add 1 to make positions 1-based
+        }
+
+        // Convert to array and filter out single occurrences
+        const letterArray = Array.from(letters.entries())
+            .filter(([_, positions]) => positions.length > 0);
+
+        if (letterArray.length === 0) {
+            return null;
+        }
+
+        // Return random letter with its positions
+        return letterArray[Math.floor(Math.random() * letterArray.length)];
+    }
+
+    showHint(message) {
+        this.hintMessage.textContent = message;
+        this.hintMessage.classList.add('show');
+        setTimeout(() => {
+            this.hintMessage.classList.remove('show');
+        }, 5000); // Hide hint after 5 seconds
     }
 }
 
