@@ -1,8 +1,9 @@
-// Word list (we'll use a small list for testing, but you can expand this)
-const WORDS = ['APPLE', 'BEACH', 'CHAIR', 'DANCE', 'EAGLE', 'FLAME', 'GRAPE', 'HOUSE', 'IMAGE', 'JUICE'];
+import { loadWordLists } from './wordlist.js';
 
 class WordleGame {
     constructor() {
+        this.wordLength = 5;
+        this.difficulty = 'medium';
         this.word = '';
         this.guesses = [];
         this.currentGuess = '';
@@ -11,25 +12,50 @@ class WordleGame {
         this.board = document.getElementById('board');
         this.keyboard = document.getElementById('keyboard');
         this.modal = document.getElementById('game-over-modal');
+        this.wordLists = null;
         
-        this.initializeGame();
-        this.createBoard();
-        this.createKeyboard();
-        this.addEventListeners();
+        this.initializeWordLists().then(() => {
+            this.initializeGame();
+            this.createBoard();
+            this.createKeyboard();
+            this.addEventListeners();
+        });
+    }
+
+    async initializeWordLists() {
+        try {
+            this.wordLists = await loadWordLists();
+            console.log('Loaded word lists with sizes:', {
+                'easy': Object.keys(this.wordLists.easy).reduce((acc, key) => ({ ...acc, [key]: this.wordLists.easy[key].length }), {}),
+                'medium': Object.keys(this.wordLists.medium).reduce((acc, key) => ({ ...acc, [key]: this.wordLists.medium[key].length }), {}),
+                'hard': Object.keys(this.wordLists.hard).reduce((acc, key) => ({ ...acc, [key]: this.wordLists.hard[key].length }), {})
+            });
+        } catch (error) {
+            console.error('Failed to load word lists:', error);
+        }
     }
 
     initializeGame() {
-        // Select a random word
-        this.word = WORDS[Math.floor(Math.random() * WORDS.length)];
+        this.wordLength = parseInt(document.getElementById('word-length').value);
+        this.difficulty = document.getElementById('difficulty').value;
+        const wordList = this.wordLists[this.difficulty][this.wordLength];
+        this.word = wordList[Math.floor(Math.random() * wordList.length)];
+        document.querySelector('.game-container').setAttribute('data-word-length', this.wordLength);
         console.log('Word:', this.word); // For testing
     }
 
+    isValidWord(word) {
+        // Check against all words list for validation, regardless of difficulty
+        return this.wordLists.allWords[word.length].includes(word);
+    }
+
     createBoard() {
+        this.board.innerHTML = ''; // Clear existing board
         for (let i = 0; i < 6; i++) {
             const row = document.createElement('div');
             row.className = 'row';
             
-            for (let j = 0; j < 5; j++) {
+            for (let j = 0; j < this.wordLength; j++) {
                 const tile = document.createElement('div');
                 tile.className = 'tile';
                 row.appendChild(tile);
@@ -65,6 +91,8 @@ class WordleGame {
 
     addEventListeners() {
         document.addEventListener('keydown', (e) => this.handleKeypress(e));
+        document.getElementById('word-length').addEventListener('change', () => this.handleWordLengthChange());
+        document.getElementById('new-game').addEventListener('click', () => this.handleWordLengthChange());
         this.keyboard.addEventListener('click', (e) => {
             if (e.target.matches('button')) {
                 const key = e.target.getAttribute('data-key');
@@ -73,6 +101,10 @@ class WordleGame {
         });
         
         document.getElementById('play-again').addEventListener('click', () => {
+            this.resetGame();
+        });
+
+        document.getElementById('word-length').addEventListener('change', () => {
             this.resetGame();
         });
     }
@@ -96,7 +128,7 @@ class WordleGame {
             this.submitGuess();
         } else if (key === '⌫') {
             this.currentGuess = this.currentGuess.slice(0, -1);
-        } else if (this.currentGuess.length < 5 && /^[A-Z]$/.test(key)) {
+        } else if (this.currentGuess.length < this.wordLength && /^[A-Z]$/.test(key)) {
             this.currentGuess += key;
         }
 
@@ -104,13 +136,13 @@ class WordleGame {
     }
 
     submitGuess() {
-        if (this.currentGuess.length !== 5) {
+        if (this.currentGuess.length !== this.wordLength) {
             this.showMessage('Not enough letters');
             this.shakeCurrentRow();
             return;
         }
 
-        if (!WORDS.includes(this.currentGuess)) {
+        if (!this.isValidWord(this.currentGuess)) {
             this.showMessage('Not in word list');
             this.shakeCurrentRow();
             return;
@@ -132,7 +164,7 @@ class WordleGame {
     }
 
     checkGuess() {
-        const result = Array(5).fill('absent');
+        const result = Array(this.wordLength).fill('absent');
         const letterCount = {};
         
         // Count letters in the target word
@@ -141,7 +173,7 @@ class WordleGame {
         }
         
         // First pass: mark correct letters
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < this.wordLength; i++) {
             if (this.currentGuess[i] === this.word[i]) {
                 result[i] = 'correct';
                 letterCount[this.currentGuess[i]]--;
@@ -149,7 +181,7 @@ class WordleGame {
         }
         
         // Second pass: mark present letters
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < this.wordLength; i++) {
             if (result[i] !== 'correct' && 
                 letterCount[this.currentGuess[i]] > 0) {
                 result[i] = 'present';
@@ -162,7 +194,7 @@ class WordleGame {
 
     updateBoard() {
         const row = this.board.children[this.guesses.length];
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < this.wordLength; i++) {
             const tile = row.children[i];
             tile.textContent = this.currentGuess[i] || '';
         }
@@ -171,7 +203,7 @@ class WordleGame {
     updateColors(result) {
         const row = this.board.children[this.guesses.length - 1];
         
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < this.wordLength; i++) {
             const tile = row.children[i];
             const letter = this.currentGuess[i];
             const key = document.querySelector(`[data-key="${letter}"]`);
@@ -235,7 +267,7 @@ class WordleGame {
         this.guesses = [];
         this.currentGuess = '';
         this.gameOver = false;
-        this.word = WORDS[Math.floor(Math.random() * WORDS.length)];
+        this.word = this.wordLists[this.difficulty][this.wordLength][Math.floor(Math.random() * this.wordLists[this.difficulty][this.wordLength].length)];
         
         // Hide modal
         this.modal.style.display = 'none';
@@ -244,6 +276,22 @@ class WordleGame {
         this.createBoard();
         
         console.log('New word:', this.word); // For testing
+    }
+
+    handleWordLengthChange() {
+        this.wordLength = parseInt(document.getElementById('word-length').value);
+        this.difficulty = document.getElementById('difficulty').value;
+        this.guesses = [];
+        this.currentGuess = '';
+        this.gameOver = false;
+        this.initializeGame();
+        this.createBoard();
+        this.updateDisplay();
+        document.querySelector('.game-container').setAttribute('data-word-length', this.wordLength);
+    }
+
+    updateDisplay() {
+        // Update display logic here
     }
 }
 

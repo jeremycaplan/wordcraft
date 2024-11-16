@@ -1,9 +1,15 @@
 :root {
-    --correct-color: #6aaa64;
-    --present-color: #c9b458;
-    --absent-color: #787c7e;
-    --key-bg: #d3d6da;
+    --color-correct: #6aaa64;
+    --color-present: #c9b458;
+    --color-absent: #787c7e;
     --border-color: #d3d6da;
+    --text-color: #1a1a1a;
+    --title-color: #1a1a1a;
+    --background-primary: #ffffff;
+    --background-secondary: #f6f7f9;
+    --accent-color: #4f46e5;
+    --gradient-start: #4f46e5;
+    --gradient-end: #9333ea;
 }
 
 * {
@@ -13,26 +19,48 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary) 100%);
+    min-height: 100vh;
 }
 
 .game-container {
-    width: 100%;
     max-width: 500px;
     margin: 0 auto;
-    height: 100vh;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
     flex-direction: column;
+    align-items: center;
 }
 
 header {
     text-align: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    border-radius: 12px;
+    color: white;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0;
+    background: linear-gradient(135deg, #ffffff, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 8px;
 }
 
 .message {
@@ -57,24 +85,68 @@ header {
     grid-gap: 5px;
     padding: 10px;
     box-sizing: border-box;
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
 }
 
 .row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
     grid-gap: 5px;
 }
 
+[data-word-length="3"] .row {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+[data-word-length="4"] .row {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+[data-word-length="5"] .row {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+[data-word-length="6"] .row {
+    grid-template-columns: repeat(6, 1fr);
+}
+
 .tile {
-    width: 60px;
-    height: 60px;
+    width: 62px;
+    height: 62px;
     border: 2px solid var(--border-color);
+    border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 2rem;
     font-weight: bold;
     text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.tile.filled {
+    border-color: var(--accent-color);
+    transform: scale(1.02);
+}
+
+.tile.correct {
+    background-color: var(--color-correct);
+    border-color: var(--color-correct);
+    color: white;
+    transform: scale(1.05);
+}
+
+.tile.present {
+    background-color: var(--color-present);
+    border-color: var(--color-present);
+    color: white;
+}
+
+.tile.absent {
+    background-color: var(--color-absent);
+    border-color: var(--color-absent);
+    color: white;
 }
 
 .keyboard-container {
@@ -97,7 +169,7 @@ header {
 }
 
 .key {
-    background-color: var(--key-bg);
+    background-color: var(--background-secondary);
     border: none;
     border-radius: 4px;
     min-width: 40px;
@@ -107,43 +179,68 @@ header {
     cursor: pointer;
     text-transform: uppercase;
     color: black;
+    transition: all 0.2s ease;
 }
 
 .key.wide {
     min-width: 65px;
 }
 
-.tile.correct {
-    background-color: var(--correct-color);
-    border-color: var(--correct-color);
-    color: white;
-}
-
-.tile.present {
-    background-color: var(--present-color);
-    border-color: var(--present-color);
-    color: white;
-}
-
-.tile.absent {
-    background-color: var(--absent-color);
-    border-color: var(--absent-color);
-    color: white;
-}
-
 .key.correct {
-    background-color: var(--correct-color);
+    background-color: var(--color-correct);
     color: white;
 }
 
 .key.present {
-    background-color: var(--present-color);
+    background-color: var(--color-present);
     color: white;
 }
 
 .key.absent {
-    background-color: var(--absent-color);
+    background-color: var(--color-absent);
     color: white;
+}
+
+.game-options {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    background: var(--background-secondary);
+    border-radius: 8px;
+}
+
+.game-options select {
+    padding: 8px 16px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.game-options select:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.game-options button {
+    padding: 8px 20px;
+    font-size: 16px;
+    color: white;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.game-options button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
 .modal {
@@ -169,7 +266,7 @@ header {
     margin-top: 1rem;
     padding: 0.5rem 1rem;
     font-size: 1rem;
-    background-color: var(--correct-color);
+    background-color: var(--color-correct);
     color: white;
     border: none;
     border-radius: 4px;
